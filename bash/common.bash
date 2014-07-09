@@ -6,9 +6,9 @@ then
 fi
 
 declare -ar nodes=(8098 8099 8100)
-declare -i num_procs=1 # 24
-declare -i sleep_seconds=15 # 15 # NB: not less than 5 to ensure delete_mode seconds exceeded.
-declare -i object_count=250 # 2500
+declare -i num_procs=24
+declare -i sleep_seconds=30 # 15 # NB: not less than 5 to ensure delete_mode seconds exceeded.
+declare -i object_count=2500 # 2500
 
 function now
 {
@@ -44,7 +44,6 @@ function curl_exec
 
   local -i retry_count=0
   local -i curl_exit=0
-  local host="$(curl_host)"
 
   curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
   curl_exit=$?
