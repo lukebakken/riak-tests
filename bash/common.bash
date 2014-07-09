@@ -43,23 +43,27 @@ function curl_exec
   shift
 
   local -i retry_count=0
+  local -i curl_exit=0
   local host="$(curl_host)"
+
   curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
+  curl_exit=$?
   while [[ $curl_output != 20[0-9] ]] && (( retry_count < 5 ))
   do
-    if [[ $curl_output == '000' ]] || (( $? != 0 ))
+    if [[ $curl_output == '000' || $curl_output == '300' ]] || (( curl_exit != 0 ))
     then
       break
     else
-      pwarn "$id:$@:$curl_output:$?"
+      pwarn "$id:$@:$curl_output:$curl_exit"
       sleep 1
       curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
+      curl_exit=$?
       (( ++retry_count ))
     fi
   done
-  if [[ $curl_output != 20[0-9] ]]
+  if [[ $curl_output != 20[0-9] ]] || (( curl_exit != 0 ))
   then
-    perr "$id:$@:$curl_output:$?"
+    perr "$id:$@:$curl_output:$curl_exit"
   fi
 }
 
