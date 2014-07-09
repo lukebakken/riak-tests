@@ -7,8 +7,8 @@ fi
 
 declare -ar nodes=(8098 8099 8100)
 declare -i num_procs=1 # 24
-declare -i sleep_seconds=1 # 15
-declare -i object_count=10 # 2500
+declare -i sleep_seconds=15 # 15 # NB: not less than 5 to ensure delete_mode seconds exceeded.
+declare -i object_count=250 # 2500
 
 function now
 {
@@ -47,14 +47,46 @@ function curl_exec
   curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
   while [[ $curl_output != 20[0-9] ]] && (( retry_count < 5 ))
   do
-    pwarn "$id:$@:$curl_output:$?"
-    sleep 1
-    curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
-    (( ++retry_count ))
+    if [[ $curl_output == '000' ]] || (( $? != 0 ))
+    then
+      break
+    else
+      pwarn "$id:$@:$curl_output:$?"
+      sleep 1
+      curl_output=$(curl --silent --output /dev/null --write-out "%{http_code}" "$@")
+      (( ++retry_count ))
+    fi
   done
   if [[ $curl_output != 20[0-9] ]]
   then
     perr "$id:$@:$curl_output:$?"
   fi
+}
+
+function object_deleter_no_retry
+{
+  local -i deleter_id=$1
+  pinfo "starting deleter with id: $deleter_id"
+
+  local -i j=0
+  for ((j=0; j < object_count; ++j))
+  do
+    local host="$(curl_host)"
+    curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+  done
+
+  pinfo "done - deleter with id: $deleter_id"
+}
+
+function nuke_all_objects
+{
+  declare -i i=0
+  for ((i=0; i < num_procs; ++i))
+  do
+    object_deleter_no_retry $i &
+  done
+
+  wait
+  pinfo 'nuke done'
 }
 
