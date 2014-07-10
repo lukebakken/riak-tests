@@ -6,9 +6,9 @@ then
 fi
 
 declare -ar nodes=(8098 8099 8100)
-declare -i num_procs=24
-declare -i sleep_seconds=30 # 15 # NB: not less than 5 to ensure delete_mode seconds exceeded.
-declare -i object_count=2500 # 2500
+declare -i num_procs=2 # 24
+declare -i sleep_seconds=5 # NB: not less than 5 to ensure delete_mode seconds exceeded.
+declare -i object_count=250 # 2500
 
 function now
 {
@@ -49,7 +49,8 @@ function curl_exec
   curl_exit=$?
   while [[ $curl_output != 20[0-9] ]] && (( retry_count < 5 ))
   do
-    if [[ $curl_output == '000' || $curl_output == '300' ]] || (( curl_exit != 0 ))
+    # if [[ $curl_output == '000' || $curl_output == '300' ]] || (( curl_exit != 0 ))
+    if [[ $curl_output == 30[0-9] || $curl_output == 40[0-9] ]]
     then
       break
     else
@@ -75,7 +76,9 @@ function object_deleter_no_retry
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
-    curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    # PW - curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # NO PW curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
   done
 
   pinfo "done - deleter with id: $deleter_id"

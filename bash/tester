@@ -16,6 +16,10 @@ fi
 source_dir="$(dirname $(realpath $0))"
 source "$source_dir/common.bash"
 
+test_object='tester.obj'
+
+dd if=/dev/urandom bs=65536 count=1 2>/dev/null | openssl enc -a > $test_object
+
 function object_loader
 {
   local -i loader_id=$1
@@ -25,7 +29,8 @@ function object_loader
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
-    curl_exec 'object_loader' -H'Content-Type: text/plain' -XPUT "$host/buckets/bucket-$loader_id/keys/$j" -d "OBJECT $j"
+    curl_exec 'object_loader' -H'Content-Type: text/plain' -XPUT "$host/buckets/bucket-$loader_id/keys/$j" --data-binary "@$test_object"
+    # curl_exec 'object_loader' -H'Content-Type: text/plain' -XPUT "$host/buckets/bucket-$loader_id/keys/$j" -d "OBJECT $j"
   done
 
   pinfo "done - loader with id: $loader_id"
@@ -55,7 +60,9 @@ function object_deleter
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
-    curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    # PW curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # NO PW curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
   done
 
   pinfo "done - deleter with id: $deleter_id"
