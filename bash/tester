@@ -8,13 +8,7 @@
 # Re-insert objects
 # Check objects
 
-if ! hash realpath 2>/dev/null
-then
-  echo "'realpath' cmd missing" 1>&2
-  exit 1
-fi
-source_dir="$(dirname $(realpath $0))"
-source "$source_dir/common.bash"
+source ./common.bash
 
 test_object='tester.obj'
 
@@ -60,9 +54,9 @@ function object_deleter
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
-    # PW curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
-    # NO PW curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
-    curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # PW: curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # NO PW: curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    curl_exec 'object_deleter' -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
   done
 
   pinfo "done - deleter with id: $deleter_id"

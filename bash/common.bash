@@ -5,10 +5,12 @@ then
   errexit 'bash version 4 is required.'
 fi
 
-declare -ar nodes=(8098 8099 8100)
-declare -i num_procs=2 # 24
-declare -i sleep_seconds=5 # NB: not less than 5 to ensure delete_mode seconds exceeded.
-declare -i object_count=250 # 2500
+# declare -ar nodes=(8098 8099 8100)
+# NB: devrel
+declare -ar nodes=(10018 10019 10020)
+declare -i num_procs=4 # 24
+declare -i sleep_seconds=120 # NB: not less than 5 seconds to ensure delete_mode seconds exceeded.
+declare -i object_count=1000 # 2500
 
 function now
 {
@@ -76,9 +78,9 @@ function object_deleter_no_retry
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
-    # PW - curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
-    # NO PW curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
-    curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # PW: curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j?pw=3"
+    # NO PW: curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
+    curl --silent --output /dev/null -XDELETE "$host/buckets/bucket-$deleter_id/keys/$j"
   done
 
   pinfo "done - deleter with id: $deleter_id"
