@@ -7,10 +7,10 @@ fi
 
 # declare -ar nodes=(8098 8099 8100)
 # NB: devrel
-declare -ar nodes=(10018 10019 10020)
+declare -ar nodes=(10018 10028 10038)
 declare -i num_procs=4 # 24
 declare -i sleep_seconds=120 # NB: not less than 5 seconds to ensure delete_mode seconds exceeded.
-declare -i object_count=1000 # 2500
+declare -i object_count=500 # 2500
 
 function now
 {
