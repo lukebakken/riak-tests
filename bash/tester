@@ -35,14 +35,21 @@ function object_checker
   local -i checker_id=$1
   pinfo "starting checker with id: $checker_id"
 
+  local -i exec_rv=0
   local -i j=0
   for ((j=0; j < object_count; ++j))
   do
     local host="$(curl_host)"
     curl_exec 'object_checker' -XGET "$host/buckets/bucket-$checker_id/keys/$j"
+    local -i exec_rv=$?
+    if (( exec_rv != 0 ))
+    then
+      return $exec_rv
+    fi
   done
 
   pinfo "done - checker with id: $checker_id"
+  return 0 
 }
 
 function object_deleter
@@ -95,12 +102,46 @@ do
   wait
   pinfo 'object load done'
 
+  declare -ai pids
   for ((i=0; i < num_procs; ++i))
   do
     object_checker $i &
+    pids[$i]=$!
   done
 
-  wait
-  pinfo 'object check done'
+  declare -i errors=0
+  declare -i completed=0
+  for ((i = 0; completed < num_procs; ++i))
+  do
+    sleep 0.5
+    if (( i == num_procs ))
+    then
+      (( i = 0 ))
+    fi
+    declare -i pid=${pids[$i]}
+    if kill -0 $pid 2>/dev/null
+    then
+      pdebug "checker pid $pid still running"
+    else
+      if wait $pid
+      then
+        pdebug "checker pid $pid exited OK"
+        (( ++completed ))
+      else
+        pdebug "checker pid $pid exited with error"
+        (( ++errors ))
+        (( ++completed ))
+      fi
+    fi
+  done
+
+  if (( errors > 0 ))
+  then
+    perr "exiting due to check errors"
+    exit 1
+  else
+    pinfo 'object check done'
+  fi
+
 done
 

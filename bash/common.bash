@@ -5,16 +5,26 @@ then
   errexit 'bash version 4 is required.'
 fi
 
+declare -i debug=0
+
 # declare -ar nodes=(8098 8099 8100)
 # NB: devrel
 declare -ar nodes=(10018 10028 10038)
 declare -i num_procs=4 # 24
 declare -i sleep_seconds=120 # NB: not less than 5 seconds to ensure delete_mode seconds exceeded.
-declare -i object_count=500 # 2500
+declare -i object_count=1000 # 2500
 
 function now
 {
   date '+%Y-%m-%d %H:%M:%S'
+}
+
+function pdebug
+{
+  if (( debug > 0 ))
+  then
+    echo "$(now):[debug]:$@"
+  fi
 }
 
 function pinfo
@@ -63,10 +73,13 @@ function curl_exec
       (( ++retry_count ))
     fi
   done
+
   if [[ $curl_output != 20[0-9] ]] || (( curl_exit != 0 ))
   then
     perr "$id:$@:$curl_output:$curl_exit"
+    return 1
   fi
+  return 0
 }
 
 function object_deleter_no_retry
